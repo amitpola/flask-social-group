@@ -2,6 +2,7 @@ from flask import request,Response
 from flask_restful import Resource
 from database.models import Group, User
 from flask_jwt_extended import jwt_required, current_user, get_jwt_identity
+from utils import messages
 
 class GroupsApi(Resource):  
     def get(self):  
@@ -34,9 +35,9 @@ class GroupApi(Resource):
         if group.admins.count(user_email) != 0:
             body = request.get_json()
             Group.objects.get(id=id).update(**body)
-            return 'Update Successfull',200
+            return messages.success_message,200
         
-        return {'error message':'You do not have admin credentials'}, 401
+        return messages.error_message, 401
     
     @jwt_required()
     def delete(self,id):
@@ -47,9 +48,9 @@ class GroupApi(Resource):
         
         if group.admins.count(user_email) != 0:
             Group.objects.get(id=id).delete()
-            return 'Group Deleted', 200
+            return messages.success_message, 200
         
-        return {'error message':'You do not have admin credentials'}, 401
+        return messages.error_message, 401
     
 class MakeOrRemoveAdmin(Resource):
     @jwt_required()
@@ -65,9 +66,9 @@ class MakeOrRemoveAdmin(Resource):
         if group.admins.count(user_email) != 0:
             group.admins.append(str(admin_to_make))
             group.save()
-            return {'message':'Admin credentials updated successfully'}, 200
+            return messages.success_message, 200
         
-        return {'error message':'Admin authorities are not valid'}, 401
+        return messages.error_message, 401
 
     @jwt_required()
     def delete(self,id):
@@ -89,9 +90,9 @@ class MakeOrRemoveAdmin(Resource):
             
             group.save()
             
-            return {'message':'Person removed successfully'}, 200
+            return messages.success_message, 200
         
-        return {'error message':'Admin authorities are not valid'}, 401 
+        return messages.error_message, 401 
 
 
 
