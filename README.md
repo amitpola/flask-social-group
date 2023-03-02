@@ -1,4 +1,4 @@
-# flask-social-group
+# Flask-Social-Group
 A social-group application created in python using Flask FrameWork. Users can created social groups for respective interaction and exchange authorizations. 
 
 #To run the application 🏃‍♂️
