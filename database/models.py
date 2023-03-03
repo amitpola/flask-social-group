@@ -2,6 +2,13 @@ from .db import db
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import datetime
 
+
+class SocialPost(db.Document):
+    title = db.StringField(required=True,unique=True)
+    description = db.StringField(required=True)
+    created = db.DateTimeField(default=datetime.utcnow)
+    added_by_group = db.ReferenceField('Group')
+
 class Group(db.Document):
     public = db.BooleanField(default=True,required=True)
     name = db.StringField(unique=True,required=True)
@@ -9,6 +16,9 @@ class Group(db.Document):
     admins = db.ListField(db.StringField())
     moderators = db.ListField(db.StringField())
     members = db.ListField(db.StringField())
+    posts = db.ListField(db.ReferenceField('SocialPost', reverse_delete_rule=db.PULL))
+    
+Group.register_delete_rule(SocialPost,"added_by_group",db.CASCADE)
 
 
 class User(db.Document):
@@ -22,10 +32,3 @@ class User(db.Document):
         return check_password_hash(self.password,password)
     
 
-class SocialPost(db.Document):
-    title = db.StringField(required=True,unique=True)
-    description = db.StringField(required=True)
-    created = db.DateTimeField(default=datetime.utcnow)
-
-    def __str__(self):
-        return self.title
