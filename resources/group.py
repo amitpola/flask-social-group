@@ -1,29 +1,40 @@
-from flask import request,Response
+from bson import ObjectId
+from flask import request,Response, jsonify
 from flask_restful import Resource
 from database.models import Group, User
 from flask_jwt_extended import jwt_required, current_user, get_jwt_identity
 from utils import messages
+from database.db import social_group_instance
+import json
+from bson.json_util import dumps
 
 class GroupsApi(Resource):  
     def get(self):  
-        groups = Group.objects().to_json()
-        return Response(groups,mimetype="application/json",status=200)
+        collection = social_group_instance.group.find()   
+        return Response(dumps(collection),mimetype="application/json",status=200) 
+        
     
     @jwt_required()
     def post(self):
         user_id = get_jwt_identity()
         loggedinUser = User.objects.get(id=user_id)
         user_email = loggedinUser.email
+        
         body = request.get_json()
-        group = Group(**body)
-        group.admins.append(str(user_email))
-        group.save()
-        return {'id':str(group.id)}, 200
+
+        group_col_instance = social_group_instance['group']
+        group = group_col_instance.insert_one(body)
+
+        document = social_group_instance.group.find_one({"_id":ObjectId(group.inserted_id)})
+        if document:
+            document['admins'].append(user_email)
+            social_group_instance.group.update_one({"_id":document['_id']},{"$set":document})
+        return {'id':str(group.inserted_id)}, 200
     
 class GroupApi(Resource):
     def get(self,id):
-        group = Group.objects.get(id=id).to_json()
-        return Response(group,mimetype="application/json",status=200)
+        document = social_group_instance.group.find_one({"_id":ObjectId(id)})
+        return Response(dumps(document),mimetype="application/json",status=200)
     
     @jwt_required()
     def put(self,id):        
@@ -83,9 +94,9 @@ class MakeOrRemoveAdmin(Resource):
         if group.admins.count(user_email) != 0:
             if group.admins.count(member_to_remove) != 0:
                 group.admins.remove(member_to_remove)
-            elif group.moderators.count(member_to_remove) != 0:
+            if group.moderators.count(member_to_remove) != 0:
                 group.moderators.remove(member_to_remove)
-            elif group.members.count(member_to_remove) != 0:
+            if group.members.count(member_to_remove) != 0:
                 group.members.remove(member_to_remove)
             
             group.save()
