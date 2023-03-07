@@ -5,7 +5,6 @@ from database.models import Group, User
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from utils import messages
 from database.db import social_group_instance
-import json
 from bson.json_util import dumps
 
 class GroupsApi(Resource):  
