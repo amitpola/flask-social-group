@@ -35,7 +35,7 @@ initialize_routes(api)
 @client.task
 def send_mail(data):
     with app.app_context():
-        msg = Message("Ping!",
+        msg = Message("Welcome to social group!",
                     sender="admin.ping",
                     recipients=[data['email']])
         msg.body = data['message']

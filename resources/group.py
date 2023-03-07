@@ -55,10 +55,11 @@ class GroupApi(Resource):
         user_id = get_jwt_identity()
         loggedinUser = User.objects.get(id=user_id)
         user_email = str(loggedinUser.email)
-        group = Group.objects.get(id=id)
-        
-        if group.admins.count(user_email) != 0:
-            Group.objects.get(id=id).delete()
+
+        group_doc = social_group_instance.group.find_one({"_id":ObjectId(id)})
+
+        if group_doc and group_doc['admins'].count(user_email) != 0:
+            social_group_instance.group.delete_one({"_id":group_doc['_id']})
             return messages.success_message, 200
         
         return messages.error_message, 401
